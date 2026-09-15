@@ -17,10 +17,7 @@ tests: {
       {
         uri: "/health/liveliness"
         status: 200
-        headers: [
-          { name: "Content-Type" value: "application/json" }
-        ]
-        body_content: "\"I'm alive!\""
+        body_content: "I'm alive!"
       },
       {
         uri: "/chat/completions"
@@ -28,32 +25,21 @@ tests: {
         headers: [
           { name: "Content-Type" value: "application/json" }
         ]
-        body_content: "{\"error\":{\"message\":\"litellm.APIError: APIError: OpenAIException - Invalid response object Traceback (most recent call last):\\n  File \\\"/usr/local/lib/python3.11/site-packages/litellm/utils.py\\\", line 6077, in convert_to_model_response_object\\n    assert response_object[\\\"choices\\\"] is not None\\nAssertionError\\n\\nreceived_args={'response_object': {'headers': {'host': 'attacker-listener:8080', 'authorization': 'Bearer sk-super-secret-production-key-12345', 'content-type': 'application/json'}}}\"}}"
-      },
-      {
-        uri: "/models"
-        status: 200
-        headers: [
-          { name: "Content-Type" value: "application/json" }
-        ]
-        body_content: "{\"object\":\"list\",\"data\":[{\"id\":\"gpt-3.5-turbo\",\"object\":\"model\",\"owned_by\":\"openai\"}]}"
+        body_content: "{\"error\":\"OpenAIException - Connection error.\"}"
       }
     ]
   }
 }
 
 tests: {
-  name: "whenNotVulnerable_returnsFalse"
+  name: "whenPatched_blockedWithErrorMessage_returnsFalse"
   expect_vulnerability: false
   mock_http_server: {
     mock_responses: [
       {
         uri: "/health/liveliness"
         status: 200
-        headers: [
-          { name: "Content-Type" value: "application/json" }
-        ]
-        body_content: "\"I'm alive!\""
+        body_content: "I'm alive!"
       },
       {
         uri: "/chat/completions"
@@ -61,21 +47,21 @@ tests: {
         headers: [
           { name: "Content-Type" value: "application/json" }
         ]
-        body_content: "{\"error\":{\"message\":\"Authentication Error, BadRequest: api_base is not allowed in request body\",\"type\":\"auth_error\",\"param\":\"None\",\"code\":\"401\"}}"
+        body_content: "{\"message\":\"Authentication Error, BadRequest: api_base is not allowed in request body\"}"
       }
     ]
   }
 }
 
 tests: {
-  name: "whenNotLiteLLM_returnsFalse"
+  name: "whenNotLitellm_returnsFalse"
   expect_vulnerability: false
   mock_http_server: {
     mock_responses: [
       {
         uri: "TSUNAMI_MAGIC_ANY_URI"
         status: 200
-        body_content: "<!doctype html>\n<html><head><title>Welcome to Nginx</title></head></html>"
+        body_content: "Hello world"
       }
     ]
   }
