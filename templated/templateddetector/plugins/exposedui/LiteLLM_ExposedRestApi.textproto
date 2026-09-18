@@ -31,7 +31,7 @@ finding: {
     "/models, /model/info, and inference endpoints require a valid Bearer token, and avoid "
     "exposing the proxy directly to untrusted networks without an authentication layer. "
     "See https://docs.litellm.ai/docs/proxy/reliability#master-key for details."
-  severity: CRITICAL
+  severity: HIGH
 }
 
 ###########
