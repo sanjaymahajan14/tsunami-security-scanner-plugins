@@ -12,12 +12,16 @@ config: {
 tests: {
   name: "whenVulnerable_returnsTrue"
   expect_vulnerability: true
+  mock_callback_server: {
+    enabled: true
+    has_interaction: true
+  }
   mock_http_server: {
     mock_responses: [
       {
-        uri: "/health/liveliness"
+        uri: "/"
         status: 200
-        body_content: "I'm alive!"
+        body_content: "... <title>LiteLLM API - Swagger UI</title> ..."
       },
       {
         uri: "/chat/completions"
@@ -34,16 +38,22 @@ tests: {
 tests: {
   name: "whenPatched_blockedWithErrorMessage_returnsFalse"
   expect_vulnerability: false
+  mock_callback_server: {
+    enabled: true
+    has_interaction: false
+  }
   mock_http_server: {
     mock_responses: [
+      # 1. Fingerprint LiteLLM
       {
-        uri: "/health/liveliness"
+        uri: "/"
         status: 200
-        body_content: "I'm alive!"
+        body_content: "... <title>LiteLLM API - Swagger UI</title> ..."
       },
+      # 2. Exploit probe blocked with the patch error message
       {
         uri: "/chat/completions"
-        status: 401
+        status: 400
         headers: [
           { name: "Content-Type" value: "application/json" }
         ]
@@ -56,6 +66,7 @@ tests: {
 tests: {
   name: "whenNotLitellm_returnsFalse"
   expect_vulnerability: false
+
   mock_http_server: {
     mock_responses: [
       {

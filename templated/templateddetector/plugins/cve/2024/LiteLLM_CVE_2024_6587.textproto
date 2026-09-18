@@ -1,15 +1,17 @@
 # proto-file: proto/templated_plugin.proto
 # proto-message: TemplatedPlugin
 
-###############
-# PLUGIN INFO #
-###############
+# ###############
+# PLUGIN INFO
+# ###############
+
 info: {
   type: VULN_DETECTION
   name: "LiteLLM_CVE_2024_6587"
   author: "sanjaymahajan14"
   version: "1.0"
 }
+
 finding: {
   main_id: {
     publisher: "GOOGLE"
@@ -24,39 +26,31 @@ finding: {
     value: "CVE-2024-6587"
   }
 }
+
 config: {}
 
-###########
-# ACTIONS #
-###########
+# ###########
+# ACTIONS
+# ###########
+
 actions: {
   name: "fingerprint_litellm"
   http_request: {
     method: GET
-    uri: "/health/liveliness"
+    uri: "/"
     response: {
       http_status: 200
-      expect_any: {
+      expect_all: {
         conditions: [
-          {
-            body: {}
-            contains: "I'm alive!"
-          },
-          {
-            body: {}
-            contains: "healthy"
-          },
-          {
-            body: {}
-            contains: "LiteLLM"
-          }
+          { body: {} contains: "<title>LiteLLM" }
         ]
       }
     }
   }
 }
+
 actions: {
-  name: "check_api_base_ssrf"
+  name: "check_api_base_ssrf_oob"
   http_request: {
     method: POST
     uri: "/chat/completions"
@@ -66,27 +60,30 @@ actions: {
         value: "application/json"
       }
     ]
-    data: "{\"model\":\"gpt-3.5-turbo\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}],\"api_base\":\"http://127.0.0.1:9/v1\"}"
-    response: {
-      extract_all: {
-        patterns: [
-          {
-            from_body: {}
-            variable_name: "is_vulnerable"
-            regexp: "(?s)\\A((?!.*\"message\"\\s*:\\s*\"Authentication Error,\\s*BadRequest:\\s*api_base is not allowed in request body\").*)\\z"
-          }
-        ]
-      }
-    }
+    data: "{\"model\":\"gpt-3.5-turbo\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}],\"api_base\":\"{{ T_CBS_URI }}?\"}"
   }
+}
+
+actions: {
+  name: "sleep"
+  utility: { sleep: { duration_ms: 5000 } }
+}
+
+actions: {
+  name: "check_callback_server_logs"
+  callback_server: { action_type: CHECK }
 }
 
 #############
 # WORKFLOWS #
 #############
+
 workflows: {
+  condition: REQUIRES_CALLBACK_SERVER
   actions: [
     "fingerprint_litellm",
-    "check_api_base_ssrf"
+    "check_api_base_ssrf_oob",
+    "sleep",
+    "check_callback_server_logs"
   ]
 }
